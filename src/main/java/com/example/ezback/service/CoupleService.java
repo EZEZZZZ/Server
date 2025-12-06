@@ -1,6 +1,7 @@
 package com.example.ezback.service;
 
 import com.example.ezback.dto.CoupleConnectResponse;
+import com.example.ezback.dto.CoupleDisconnectResponse;
 import com.example.ezback.dto.CoupleStatusResponse;
 import com.example.ezback.dto.PartnerResponse;
 import com.example.ezback.entity.Couple;
@@ -100,5 +101,17 @@ public class CoupleService {
                 : couple.getUser1();
 
         return new CoupleStatusResponse(true, partner.getId());
+    }
+
+    @Transactional
+    public CoupleDisconnectResponse disconnectCouple(User currentUser) {
+        if (!currentUser.isInCouple()) {
+            throw new NoCoupleException("현재 커플이 아닙니다.");
+        }
+
+        Couple couple = currentUser.getCouple();
+        coupleRepository.delete(couple);
+
+        return new CoupleDisconnectResponse("커플이 해제되었습니다.");
     }
 }
