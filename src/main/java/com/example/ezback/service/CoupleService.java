@@ -1,12 +1,14 @@
 package com.example.ezback.service;
 
 import com.example.ezback.dto.CoupleConnectResponse;
+import com.example.ezback.dto.PartnerResponse;
 import com.example.ezback.entity.Couple;
 import com.example.ezback.entity.CoupleCode;
 import com.example.ezback.entity.User;
 import com.example.ezback.exception.AlreadyCoupleException;
 import com.example.ezback.exception.CoupleCodeNotFoundException;
 import com.example.ezback.exception.InvalidRequestException;
+import com.example.ezback.exception.NoCoupleException;
 import com.example.ezback.repository.CoupleCodeRepository;
 import com.example.ezback.repository.CoupleRepository;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +64,26 @@ public class CoupleService {
                 codeOwner.getId(),
                 codeOwner.getName(),
                 "커플이 성공적으로 연결되었습니다."
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public PartnerResponse getPartner(User currentUser) {
+        if (!currentUser.isInCouple()) {
+            throw new NoCoupleException("아직 커플이 연결되지 않았습니다.");
+        }
+
+        Couple couple = currentUser.getCouple();
+        User partner = couple.getUser1().getId().equals(currentUser.getId())
+                ? couple.getUser2()
+                : couple.getUser1();
+
+        return new PartnerResponse(
+                partner.getId(),
+                partner.getName(),
+                partner.getEmail(),
+                couple.getConnectedAt(),
+                "상대방 정보 조회 성공"
         );
     }
 }
