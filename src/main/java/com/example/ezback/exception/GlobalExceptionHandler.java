@@ -37,10 +37,17 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(e.getMessage()));
     }
 
+    @ExceptionHandler(CoupleCodeNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCoupleCodeNotFoundException(CoupleCodeNotFoundException e) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception e) {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("커플 코드를 생성할 수 없습니다."));
+                .body(new ErrorResponse("커플 연결 중 오류가 발생했습니다."));
     }
 }
