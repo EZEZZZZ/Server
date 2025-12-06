@@ -1,6 +1,7 @@
 package com.example.ezback.service;
 
 import com.example.ezback.dto.CoupleConnectResponse;
+import com.example.ezback.dto.CoupleStatusResponse;
 import com.example.ezback.dto.PartnerResponse;
 import com.example.ezback.entity.Couple;
 import com.example.ezback.entity.CoupleCode;
@@ -85,5 +86,19 @@ public class CoupleService {
                 couple.getConnectedAt(),
                 "상대방 정보 조회 성공"
         );
+    }
+
+    @Transactional(readOnly = true)
+    public CoupleStatusResponse getCoupleStatus(User currentUser) {
+        if (!currentUser.isInCouple()) {
+            return new CoupleStatusResponse(false);
+        }
+
+        Couple couple = currentUser.getCouple();
+        User partner = couple.getUser1().getId().equals(currentUser.getId())
+                ? couple.getUser2()
+                : couple.getUser1();
+
+        return new CoupleStatusResponse(true, partner.getId());
     }
 }
