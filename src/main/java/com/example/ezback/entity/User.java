@@ -39,6 +39,12 @@ public class User {
 
     private LocalDateTime updatedAt;
 
+    @OneToOne(mappedBy = "user1")
+    private Couple coupleAsUser1;
+
+    @OneToOne(mappedBy = "user2")
+    private Couple coupleAsUser2;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -53,5 +59,13 @@ public class User {
     public void updateProfile(String name, String picture) {
         this.name = name;
         this.picture = picture;
+    }
+
+    public boolean isInCouple() {
+        return coupleAsUser1 != null || coupleAsUser2 != null;
+    }
+
+    public Couple getCouple() {
+        return coupleAsUser1 != null ? coupleAsUser1 : coupleAsUser2;
     }
 }
