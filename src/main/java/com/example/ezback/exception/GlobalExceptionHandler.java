@@ -53,8 +53,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception e) {
+        String message = e.getMessage() != null && !e.getMessage().isEmpty()
+                ? e.getMessage()
+                : "사용자 정보를 조회할 수 없습니다.";
+
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("상대방 정보를 조회할 수 없습니다."));
+                .body(new ErrorResponse(message));
     }
 }
