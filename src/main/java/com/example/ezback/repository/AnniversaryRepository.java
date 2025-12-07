@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -38,4 +39,10 @@ public interface AnniversaryRepository extends JpaRepository<Anniversary, Long> 
      * Check if couple has any anniversaries
      */
     boolean existsByCouple(Couple couple);
+
+    /**
+     * Check if anniversary with same title and date exists for the couple
+     * Used for duplicate prevention
+     */
+    boolean existsByCoupleAndTitleAndDate(Couple couple, String title, LocalDate date);
 }

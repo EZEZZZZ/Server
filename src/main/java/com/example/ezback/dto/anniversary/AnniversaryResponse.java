@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
@@ -19,6 +20,7 @@ public class AnniversaryResponse {
     private LocalDate date;
     private Boolean repeat;
     private String memo;
+    private LocalDateTime createdAt;
 
     public static AnniversaryResponse from(Anniversary anniversary) {
         return AnniversaryResponse.builder()
@@ -27,6 +29,7 @@ public class AnniversaryResponse {
                 .date(anniversary.getDate())
                 .repeat(anniversary.getRepeat())
                 .memo(anniversary.getMemo())
+                .createdAt(anniversary.getCreatedAt())
                 .build();
     }
 }

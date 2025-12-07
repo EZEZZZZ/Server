@@ -2,11 +2,13 @@ package com.example.ezback.service;
 
 import com.example.ezback.dto.anniversary.AnniversariesResponse;
 import com.example.ezback.dto.anniversary.AnniversaryResponse;
+import com.example.ezback.dto.anniversary.CreateAnniversaryRequest;
 import com.example.ezback.entity.Anniversary;
 import com.example.ezback.entity.Couple;
 import com.example.ezback.entity.User;
 import com.example.ezback.exception.AnniversaryNotFoundException;
 import com.example.ezback.exception.CoupleNotFoundException;
+import com.example.ezback.exception.DuplicateAnniversaryException;
 import com.example.ezback.repository.AnniversaryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -106,5 +108,42 @@ public class AnniversaryService {
         }
 
         return anniversaryRepository.existsByCouple(couple);
+    }
+
+    /**
+     * Create a new anniversary for the couple
+     *
+     * @param user Current authenticated user
+     * @param request Anniversary creation request
+     * @return Created anniversary response
+     */
+    @Transactional
+    public AnniversaryResponse createAnniversary(User user, CreateAnniversaryRequest request) {
+        Couple couple = user.getCouple();
+
+        if (couple == null) {
+            throw new CoupleNotFoundException("커플 연결이 필요합니다.");
+        }
+
+        // Check for duplicate anniversary (title + date + couple)
+        if (anniversaryRepository.existsByCoupleAndTitleAndDate(
+                couple,
+                request.getTitle(),
+                request.getDate())) {
+            throw new DuplicateAnniversaryException("해당 기념일이 이미 존재합니다.");
+        }
+
+        // Create new anniversary
+        Anniversary anniversary = Anniversary.builder()
+                .couple(couple)
+                .title(request.getTitle())
+                .date(request.getDate())
+                .repeat(request.getRepeat())
+                .memo(request.getMemo())
+                .build();
+
+        Anniversary savedAnniversary = anniversaryRepository.save(anniversary);
+
+        return AnniversaryResponse.from(savedAnniversary);
     }
 }
