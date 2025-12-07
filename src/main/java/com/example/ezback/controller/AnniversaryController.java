@@ -1,5 +1,6 @@
 package com.example.ezback.controller;
 
+import com.example.ezback.dto.DeleteResponse;
 import com.example.ezback.dto.ErrorResponse;
 import com.example.ezback.dto.anniversary.AnniversariesResponse;
 import com.example.ezback.dto.anniversary.AnniversaryResponse;
@@ -197,5 +198,61 @@ public class AnniversaryController {
     ) {
         AnniversaryResponse response = anniversaryService.createAnniversary(user, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @DeleteMapping("/{anniversaryId}")
+    @Operation(
+            summary = "기념일 삭제",
+            description = "특정 기념일을 삭제합니다. 커플의 기념일만 삭제할 수 있으며, 다른 커플의 기념일은 삭제할 수 없습니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "삭제 성공",
+                    content = @Content(
+                            schema = @Schema(implementation = DeleteResponse.class),
+                            examples = @ExampleObject(value = "{\"message\": \"기념일이 삭제되었습니다.\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = "{\"message\": \"로그인이 필요합니다.\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "삭제 권한 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = "{\"message\": \"해당 기념일을 삭제할 권한이 없습니다.\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "기념일을 찾을 수 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = "{\"message\": \"기념일을 찾을 수 없습니다.\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 오류",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = "{\"message\": \"서버 오류가 발생했습니다.\"}")
+                    )
+            )
+    })
+    public ResponseEntity<DeleteResponse> deleteAnniversary(
+            @AuthenticationPrincipal User user,
+            @Parameter(description = "삭제할 기념일 ID")
+            @PathVariable Long anniversaryId
+    ) {
+        DeleteResponse response = anniversaryService.deleteAnniversary(user, anniversaryId);
+        return ResponseEntity.ok(response);
     }
 }

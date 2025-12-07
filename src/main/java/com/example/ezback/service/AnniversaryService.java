@@ -1,5 +1,6 @@
 package com.example.ezback.service;
 
+import com.example.ezback.dto.DeleteResponse;
 import com.example.ezback.dto.anniversary.AnniversariesResponse;
 import com.example.ezback.dto.anniversary.AnniversaryResponse;
 import com.example.ezback.dto.anniversary.CreateAnniversaryRequest;
@@ -9,6 +10,7 @@ import com.example.ezback.entity.User;
 import com.example.ezback.exception.AnniversaryNotFoundException;
 import com.example.ezback.exception.CoupleNotFoundException;
 import com.example.ezback.exception.DuplicateAnniversaryException;
+import com.example.ezback.exception.ForbiddenException;
 import com.example.ezback.repository.AnniversaryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -145,5 +147,38 @@ public class AnniversaryService {
         Anniversary savedAnniversary = anniversaryRepository.save(anniversary);
 
         return AnniversaryResponse.from(savedAnniversary);
+    }
+
+    /**
+     * Delete an anniversary
+     *
+     * @param user Current authenticated user
+     * @param anniversaryId Anniversary ID to delete
+     * @return Delete success message
+     */
+    @Transactional
+    public DeleteResponse deleteAnniversary(User user, Long anniversaryId) {
+        // 1. Find anniversary by ID
+        Anniversary anniversary = anniversaryRepository.findById(anniversaryId)
+                .orElseThrow(() -> new AnniversaryNotFoundException("기념일을 찾을 수 없습니다."));
+
+        // 2. Get user's couple
+        Couple userCouple = user.getCouple();
+
+        if (userCouple == null) {
+            throw new CoupleNotFoundException("커플 연결이 필요합니다.");
+        }
+
+        // 3. Verify ownership: Check if anniversary belongs to user's couple
+        Couple anniversaryCouple = anniversary.getCouple();
+
+        if (!anniversaryCouple.getId().equals(userCouple.getId())) {
+            throw new ForbiddenException("해당 기념일을 삭제할 권한이 없습니다.");
+        }
+
+        // 4. Delete anniversary (hard delete)
+        anniversaryRepository.delete(anniversary);
+
+        return new DeleteResponse("기념일이 삭제되었습니다.");
     }
 }
