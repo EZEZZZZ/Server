@@ -45,6 +45,18 @@ CREATE TABLE IF NOT EXISTS user_emotions (
     CONSTRAINT chk_intensity CHECK (intensity >= 1 AND intensity <= 5)
 );
 
+-- Anniversaries Table
+CREATE TABLE IF NOT EXISTS anniversaries (
+    id BIGSERIAL PRIMARY KEY,
+    couple_id BIGINT NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    date DATE NOT NULL,
+    repeat BOOLEAN NOT NULL DEFAULT false,
+    memo VARCHAR(500),
+    created_at TIMESTAMP NOT NULL,
+    CONSTRAINT fk_anniversary_couple FOREIGN KEY (couple_id) REFERENCES couples(id) ON DELETE CASCADE
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_provider ON users(provider, provider_id);
@@ -53,3 +65,5 @@ CREATE INDEX IF NOT EXISTS idx_couple_codes_user ON couple_codes(user_id);
 CREATE INDEX IF NOT EXISTS idx_couple_codes_expires ON couple_codes(expires_at);
 CREATE INDEX IF NOT EXISTS idx_emotions_user_created ON user_emotions(user_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_emotions_user_date ON user_emotions(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_anniversaries_couple_date ON anniversaries(couple_id, date);
+CREATE INDEX IF NOT EXISTS idx_anniversaries_couple ON anniversaries(couple_id);

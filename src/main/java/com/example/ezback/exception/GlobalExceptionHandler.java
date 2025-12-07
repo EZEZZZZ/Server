@@ -51,6 +51,20 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(e.getMessage()));
     }
 
+    @ExceptionHandler(AnniversaryNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAnniversaryNotFoundException(AnniversaryNotFoundException e) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(CoupleNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCoupleNotFoundException(CoupleNotFoundException e) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception e) {
         return ResponseEntity
