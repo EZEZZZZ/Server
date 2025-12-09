@@ -1,9 +1,12 @@
 package com.example.ezback.service;
 
+import com.example.ezback.dto.question.SubmitAnswerRequest;
+import com.example.ezback.dto.question.SubmitAnswerResponse;
 import com.example.ezback.dto.question.TodayQuestionResponse;
 import com.example.ezback.entity.Question;
 import com.example.ezback.entity.User;
 import com.example.ezback.entity.UserDailyQuestion;
+import com.example.ezback.exception.AlreadyAnsweredException;
 import com.example.ezback.exception.QuestionNotFoundException;
 import com.example.ezback.repository.QuestionRepository;
 import com.example.ezback.repository.UserDailyQuestionRepository;
@@ -51,5 +54,31 @@ public class QuestionService {
                 .build();
 
         return userDailyQuestionRepository.save(userDailyQuestion);
+    }
+
+    @Transactional
+    public SubmitAnswerResponse submitAnswer(User user, SubmitAnswerRequest request) {
+        LocalDate today = LocalDate.now();
+
+        // 사용자의 오늘 질문 조회 (사용자 ID + 날짜 기준 중복 제출 체크)
+        UserDailyQuestion userDailyQuestion = userDailyQuestionRepository
+                .findByUserAndDate(user, today)
+                .orElseThrow(() -> new QuestionNotFoundException("질문을 찾을 수 없습니다."));
+
+        // questionId 검증
+        if (!userDailyQuestion.getQuestion().getId().equals(request.getQuestionId())) {
+            throw new QuestionNotFoundException("질문을 찾을 수 없습니다.");
+        }
+
+        // 이미 답변 제출 여부 확인
+        if (userDailyQuestion.getAnswered()) {
+            throw new AlreadyAnsweredException("오늘의 질문은 이미 답변을 제출했습니다.");
+        }
+
+        // 답변 업데이트
+        userDailyQuestion.updateAnswer(request.getAnswer());
+        userDailyQuestionRepository.save(userDailyQuestion);
+
+        return new SubmitAnswerResponse("답변이 성공적으로 제출되었습니다.");
     }
 }
