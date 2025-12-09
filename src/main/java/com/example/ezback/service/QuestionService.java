@@ -2,10 +2,12 @@ package com.example.ezback.service;
 
 import com.example.ezback.dto.question.*;
 import com.example.ezback.entity.Question;
+import com.example.ezback.entity.SearchHistory;
 import com.example.ezback.entity.User;
 import com.example.ezback.entity.UserDailyQuestion;
 import com.example.ezback.exception.*;
 import com.example.ezback.repository.QuestionRepository;
+import com.example.ezback.repository.SearchHistoryRepository;
 import com.example.ezback.repository.UserDailyQuestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,6 +26,7 @@ public class QuestionService {
 
     private final QuestionRepository questionRepository;
     private final UserDailyQuestionRepository userDailyQuestionRepository;
+    private final SearchHistoryRepository searchHistoryRepository;
 
     @Transactional
     public TodayQuestionResponse getTodayQuestion(User user) {
@@ -150,5 +153,36 @@ public class QuestionService {
                 .collect(Collectors.toList());
 
         return QuestionSearchResultResponse.from(questionPage, results);
+    }
+
+    @Transactional
+    public SearchHistoryResponse saveSearchHistory(User user, SaveSearchHistoryRequest request) {
+        // keyword 검증 및 정규화
+        String keyword = request.getKeyword();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            throw new SearchKeywordRequiredException("검색어(keyword)가 필요합니다.");
+        }
+
+        // 검색어 정규화: trim 처리
+        String normalizedKeyword = keyword.trim();
+
+        // TODO: 검색어 정규화 정책 결정 필요 (명세에서 "trim, lower-case 등" 언급, 구체적 정책 미정)
+        // 현재는 trim만 적용, 대소문자 변환 여부는 정책 결정 필요
+        // normalizedKeyword = normalizedKeyword.toLowerCase();
+
+        // TODO: 동일 키워드 중복 저장 정책 결정 필요
+        // (1) 최신 검색 기준으로 timestamp 업데이트 - 기존 레코드 삭제 후 재생성
+        // (2) 중복 저장 허용 - 현재 구현 방식
+        // (3) 최근 N개만 보관 - 개수 체크 후 오래된 것 삭제
+        // 현재는 중복 저장 허용 방식으로 구현
+
+        SearchHistory searchHistory = SearchHistory.builder()
+                .user(user)
+                .keyword(normalizedKeyword)
+                .build();
+
+        SearchHistory savedHistory = searchHistoryRepository.save(searchHistory);
+
+        return SearchHistoryResponse.from(savedHistory);
     }
 }
