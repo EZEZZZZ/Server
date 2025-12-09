@@ -1,5 +1,7 @@
 package com.example.ezback.service;
 
+import com.example.ezback.dto.question.QuestionHistoryListResponse;
+import com.example.ezback.dto.question.QuestionHistoryResponse;
 import com.example.ezback.dto.question.SubmitAnswerRequest;
 import com.example.ezback.dto.question.SubmitAnswerResponse;
 import com.example.ezback.dto.question.TodayQuestionResponse;
@@ -7,6 +9,7 @@ import com.example.ezback.entity.Question;
 import com.example.ezback.entity.User;
 import com.example.ezback.entity.UserDailyQuestion;
 import com.example.ezback.exception.AlreadyAnsweredException;
+import com.example.ezback.exception.QuestionHistoryNotFoundException;
 import com.example.ezback.exception.QuestionNotFoundException;
 import com.example.ezback.repository.QuestionRepository;
 import com.example.ezback.repository.UserDailyQuestionRepository;
@@ -15,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -80,5 +85,26 @@ public class QuestionService {
         userDailyQuestionRepository.save(userDailyQuestion);
 
         return new SubmitAnswerResponse("답변이 성공적으로 제출되었습니다.");
+    }
+
+    @Transactional(readOnly = true)
+    public QuestionHistoryListResponse getQuestionHistory(User user) {
+        // 사용자의 질문 히스토리 조회 (날짜 기준 내림차순 정렬)
+        List<UserDailyQuestion> historyList = userDailyQuestionRepository
+                .findByUserOrderByDateDesc(user);
+
+        // TODO: 페이징 처리 필요 (명세에서 "고려 가능"이라고 명시, 구체적 파라미터 미지정)
+        // TODO: 최대 조회 기간 제한 필요 (명세에서 "예: 최근 30일"이라고 명시, 구체적 정책 미정)
+
+        // 히스토리가 비어있으면 404 예외 발생
+        if (historyList.isEmpty()) {
+            throw new QuestionHistoryNotFoundException("기록된 질문이 없습니다.");
+        }
+
+        List<QuestionHistoryResponse> historyResponses = historyList.stream()
+                .map(QuestionHistoryResponse::from)
+                .collect(Collectors.toList());
+
+        return new QuestionHistoryListResponse(historyResponses);
     }
 }

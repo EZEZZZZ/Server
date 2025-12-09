@@ -1,5 +1,6 @@
 package com.example.ezback.controller;
 
+import com.example.ezback.dto.question.QuestionHistoryListResponse;
 import com.example.ezback.dto.question.SubmitAnswerRequest;
 import com.example.ezback.dto.question.SubmitAnswerResponse;
 import com.example.ezback.dto.question.TodayQuestionResponse;
@@ -89,6 +90,38 @@ public class QuestionController {
             @Valid @RequestBody SubmitAnswerRequest request
     ) {
         SubmitAnswerResponse response = questionService.submitAnswer(user, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/history")
+    @Operation(summary = "지난 질문 목록 조회", description = "사용자가 과거에 받았던 질문 목록을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "질문 히스토리 조회 성공",
+                    content = @Content(schema = @Schema(implementation = QuestionHistoryListResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 - 로그인이 필요합니다."
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "데이터 없음 - 기록된 질문이 없습니다."
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 오류 - 지난 질문 목록을 조회할 수 없습니다."
+            )
+    })
+    public ResponseEntity<QuestionHistoryListResponse> getQuestionHistory(
+            @AuthenticationPrincipal User user
+    ) {
+        // TODO: 페이징 파라미터 지원 필요 (명세에서 "고려 가능"이라고 명시, 구체적 파라미터 미지정)
+        // @RequestParam(defaultValue = "0") int page,
+        // @RequestParam(defaultValue = "20") int size
+
+        QuestionHistoryListResponse response = questionService.getQuestionHistory(user);
         return ResponseEntity.ok(response);
     }
 }
