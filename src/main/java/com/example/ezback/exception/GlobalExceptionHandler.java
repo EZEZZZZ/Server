@@ -123,6 +123,20 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(e.getMessage()));
     }
 
+    @ExceptionHandler(AlreadyCompletedException.class)
+    public ResponseEntity<ErrorResponse> handleAlreadyCompletedException(AlreadyCompletedException e) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(MissionNotTodayException.class)
+    public ResponseEntity<ErrorResponse> handleMissionNotTodayException(MissionNotTodayException e) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
         FieldError fieldError = e.getBindingResult().getFieldError();

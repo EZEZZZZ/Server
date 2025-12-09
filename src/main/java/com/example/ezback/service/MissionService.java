@@ -1,10 +1,14 @@
 package com.example.ezback.service;
 
+import com.example.ezback.dto.mission.CompleteMissionRequest;
+import com.example.ezback.dto.mission.CompleteMissionResponse;
 import com.example.ezback.dto.mission.TodayMissionResponse;
 import com.example.ezback.entity.Mission;
 import com.example.ezback.entity.User;
 import com.example.ezback.entity.UserMission;
+import com.example.ezback.exception.AlreadyCompletedException;
 import com.example.ezback.exception.MissionNotFoundException;
+import com.example.ezback.exception.MissionNotTodayException;
 import com.example.ezback.repository.MissionRepository;
 import com.example.ezback.repository.UserMissionRepository;
 import lombok.RequiredArgsConstructor;
@@ -51,5 +55,25 @@ public class MissionService {
                 .build();
 
         return userMissionRepository.save(userMission);
+    }
+
+    @Transactional
+    public CompleteMissionResponse completeMission(User user, CompleteMissionRequest request) {
+        LocalDate today = LocalDate.now();
+
+        // 오늘 배정된 미션 조회
+        UserMission userMission = userMissionRepository
+                .findByUserAndDate(user, today)
+                .orElseThrow(() -> new MissionNotTodayException("오늘 배정된 미션이 없습니다."));
+
+        // 이미 완료된 미션인지 확인
+        if (userMission.getPerformed()) {
+            throw new AlreadyCompletedException("이미 완료된 미션입니다.");
+        }
+
+        // 미션 완료 처리
+        userMission.markAsPerformed(request.getEvidence(), request.getImageUrl());
+
+        return new CompleteMissionResponse("미션이 성공적으로 완료되었습니다.");
     }
 }

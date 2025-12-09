@@ -1,5 +1,7 @@
 package com.example.ezback.controller;
 
+import com.example.ezback.dto.mission.CompleteMissionRequest;
+import com.example.ezback.dto.mission.CompleteMissionResponse;
 import com.example.ezback.dto.mission.TodayMissionResponse;
 import com.example.ezback.entity.User;
 import com.example.ezback.service.MissionService;
@@ -9,10 +11,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -49,6 +54,39 @@ public class MissionController {
             @AuthenticationPrincipal User user
     ) {
         TodayMissionResponse response = missionService.getTodayMission(user);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/complete")
+    @Operation(summary = "미션 완료 체크", description = "오늘의 미션을 완료 처리합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "미션 완료 성공",
+                    content = @Content(schema = @Schema(implementation = CompleteMissionResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 - 이미 완료된 미션입니다."
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 - 로그인이 필요합니다."
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "충돌 - 오늘 배정된 미션이 없습니다."
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 오류 - 미션을 완료할 수 없습니다."
+            )
+    })
+    public ResponseEntity<CompleteMissionResponse> completeMission(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody CompleteMissionRequest request
+    ) {
+        CompleteMissionResponse response = missionService.completeMission(user, request);
         return ResponseEntity.ok(response);
     }
 }
