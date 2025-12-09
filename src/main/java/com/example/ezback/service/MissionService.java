@@ -2,20 +2,27 @@ package com.example.ezback.service;
 
 import com.example.ezback.dto.mission.CompleteMissionRequest;
 import com.example.ezback.dto.mission.CompleteMissionResponse;
+import com.example.ezback.dto.mission.MissionHistoryItemResponse;
+import com.example.ezback.dto.mission.MissionHistoryResponse;
 import com.example.ezback.dto.mission.TodayMissionResponse;
 import com.example.ezback.entity.Mission;
 import com.example.ezback.entity.User;
 import com.example.ezback.entity.UserMission;
 import com.example.ezback.exception.AlreadyCompletedException;
+import com.example.ezback.exception.MissionHistoryNotFoundException;
 import com.example.ezback.exception.MissionNotFoundException;
 import com.example.ezback.exception.MissionNotTodayException;
 import com.example.ezback.repository.MissionRepository;
 import com.example.ezback.repository.UserMissionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -75,5 +82,24 @@ public class MissionService {
         userMission.markAsPerformed(request.getEvidence(), request.getImageUrl());
 
         return new CompleteMissionResponse("미션이 성공적으로 완료되었습니다.");
+    }
+
+    @Transactional(readOnly = true)
+    public MissionHistoryResponse getMissionHistory(User user, Pageable pageable) {
+        Page<UserMission> missionPage = userMissionRepository.findByUserOrderByDateDesc(user, pageable);
+
+        // 히스토리가 없는 경우 예외 발생
+        if (missionPage.isEmpty()) {
+            throw new MissionHistoryNotFoundException("조회 가능한 미션 기록이 없습니다.");
+        }
+
+        List<MissionHistoryItemResponse> missions = missionPage.getContent().stream()
+                .map(MissionHistoryItemResponse::from)
+                .collect(Collectors.toList());
+
+        return MissionHistoryResponse.from(missionPage, missions);
+
+        // TODO: 커플 단위 미션 기록 조회 여부 결정 필요 (명세에서 "커플 단위 미션 기록인지 여부 정책 필요" 언급)
+        // TODO: 하루 미션 개수 정책 결정 필요 (명세에서 "하루에 하나의 미션일 수도, 여러 개일 수도" 언급)
     }
 }

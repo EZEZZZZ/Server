@@ -123,6 +123,13 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(e.getMessage()));
     }
 
+    @ExceptionHandler(MissionHistoryNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMissionHistoryNotFoundException(MissionHistoryNotFoundException e) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
     @ExceptionHandler(AlreadyCompletedException.class)
     public ResponseEntity<ErrorResponse> handleAlreadyCompletedException(AlreadyCompletedException e) {
         return ResponseEntity
