@@ -90,6 +90,35 @@ public class QuestionController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/search/history")
+    @Operation(summary = "검색 키워드 히스토리 저장", description = "사용자가 검색한 키워드를 히스토리에 저장합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "검색 히스토리 저장 성공",
+                    content = @Content(schema = @Schema(implementation = SearchHistoryResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 - keyword 누락"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 - 로그인이 필요합니다."
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 오류 - 검색 히스토리를 저장할 수 없습니다."
+            )
+    })
+    public ResponseEntity<SearchHistoryResponse> saveSearchHistory(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody SaveSearchHistoryRequest request
+    ) {
+        SearchHistoryResponse response = questionService.saveSearchHistory(user, request);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/search")
     @Operation(summary = "질문 검색", description = "키워드로 질문을 검색합니다.")
     @ApiResponses(value = {
