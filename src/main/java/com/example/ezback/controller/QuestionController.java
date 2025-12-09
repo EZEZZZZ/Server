@@ -1,5 +1,7 @@
 package com.example.ezback.controller;
 
+import com.example.ezback.dto.question.SubmitAnswerRequest;
+import com.example.ezback.dto.question.SubmitAnswerResponse;
 import com.example.ezback.dto.question.TodayQuestionResponse;
 import com.example.ezback.entity.User;
 import com.example.ezback.service.QuestionService;
@@ -9,12 +11,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+
 
 @RestController
 @RequestMapping("/questions")
@@ -49,6 +52,43 @@ public class QuestionController {
             @AuthenticationPrincipal User user
     ) {
         TodayQuestionResponse response = questionService.getTodayQuestion(user);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/answer")
+    @Operation(summary = "오늘의 질문 답변 제출", description = "사용자가 오늘의 질문에 대한 답변을 제출합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "답변 제출 성공",
+                    content = @Content(schema = @Schema(implementation = SubmitAnswerResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 - 필드 부족 또는 questionId 없음"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 - 로그인이 필요합니다."
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "질문 없음 - 질문을 찾을 수 없습니다."
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "중복 제출 - 오늘의 질문은 이미 답변을 제출했습니다."
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 오류 - 답변 제출 중 오류가 발생했습니다."
+            )
+    })
+    public ResponseEntity<SubmitAnswerResponse> submitAnswer(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody SubmitAnswerRequest request
+    ) {
+        SubmitAnswerResponse response = questionService.submitAnswer(user, request);
         return ResponseEntity.ok(response);
     }
 }
