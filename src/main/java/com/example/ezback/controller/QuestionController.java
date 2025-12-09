@@ -1,9 +1,6 @@
 package com.example.ezback.controller;
 
-import com.example.ezback.dto.question.QuestionHistoryListResponse;
-import com.example.ezback.dto.question.SubmitAnswerRequest;
-import com.example.ezback.dto.question.SubmitAnswerResponse;
-import com.example.ezback.dto.question.TodayQuestionResponse;
+import com.example.ezback.dto.question.*;
 import com.example.ezback.entity.User;
 import com.example.ezback.service.QuestionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -122,6 +119,35 @@ public class QuestionController {
         // @RequestParam(defaultValue = "20") int size
 
         QuestionHistoryListResponse response = questionService.getQuestionHistory(user);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{questionId}")
+    @Operation(summary = "지난 질문 상세 조회", description = "특정 questionId에 해당하는 과거 질문 1개를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "질문 상세 조회 성공",
+                    content = @Content(schema = @Schema(implementation = QuestionHistoryResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 - 로그인이 필요합니다."
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "질문 없음 - 해당 질문을 찾을 수 없습니다."
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 오류 - 질문 상세 정보를 조회할 수 없습니다."
+            )
+    })
+    public ResponseEntity<QuestionHistoryResponse> getQuestionDetail(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long questionId
+    ) {
+        QuestionHistoryResponse response = questionService.getQuestionDetail(user, questionId);
         return ResponseEntity.ok(response);
     }
 }

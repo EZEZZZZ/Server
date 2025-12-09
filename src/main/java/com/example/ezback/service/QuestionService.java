@@ -107,4 +107,21 @@ public class QuestionService {
 
         return new QuestionHistoryListResponse(historyResponses);
     }
+
+    @Transactional(readOnly = true)
+    public QuestionHistoryResponse getQuestionDetail(User user, Long userDailyQuestionId) {
+        // UserDailyQuestion 조회
+        UserDailyQuestion userDailyQuestion = userDailyQuestionRepository
+                .findById(userDailyQuestionId)
+                .orElseThrow(() -> new QuestionNotFoundException("해당 질문을 찾을 수 없습니다."));
+
+        // 사용자 본인의 질문인지 권한 체크
+        if (!userDailyQuestion.getUser().getId().equals(user.getId())) {
+            // TODO: 권한 없을 때 403 Forbidden vs 404 Not Found 정책 결정 필요
+            // 현재는 리소스 존재 여부를 숨기기 위해 404 반환 (보안상 권장)
+            throw new QuestionNotFoundException("해당 질문을 찾을 수 없습니다.");
+        }
+
+        return QuestionHistoryResponse.from(userDailyQuestion);
+    }
 }
