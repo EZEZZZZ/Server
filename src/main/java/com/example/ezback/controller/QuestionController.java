@@ -90,6 +90,41 @@ public class QuestionController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/search")
+    @Operation(summary = "질문 검색", description = "키워드로 질문을 검색합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "질문 검색 성공",
+                    content = @Content(schema = @Schema(implementation = QuestionSearchResultResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 - keyword 없음"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 - 로그인이 필요합니다."
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "검색 결과 없음 - 검색 결과가 없습니다."
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 오류 - 질문을 검색할 수 없습니다."
+            )
+    })
+    public ResponseEntity<QuestionSearchResultResponse> searchQuestions(
+            @AuthenticationPrincipal User user,
+            @RequestParam(required = true) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        QuestionSearchResultResponse response = questionService.searchQuestions(keyword, page, size);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/history")
     @Operation(summary = "지난 질문 목록 조회", description = "사용자가 과거에 받았던 질문 목록을 조회합니다.")
     @ApiResponses(value = {

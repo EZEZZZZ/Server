@@ -1,19 +1,16 @@
 package com.example.ezback.service;
 
-import com.example.ezback.dto.question.QuestionHistoryListResponse;
-import com.example.ezback.dto.question.QuestionHistoryResponse;
-import com.example.ezback.dto.question.SubmitAnswerRequest;
-import com.example.ezback.dto.question.SubmitAnswerResponse;
-import com.example.ezback.dto.question.TodayQuestionResponse;
+import com.example.ezback.dto.question.*;
 import com.example.ezback.entity.Question;
 import com.example.ezback.entity.User;
 import com.example.ezback.entity.UserDailyQuestion;
-import com.example.ezback.exception.AlreadyAnsweredException;
-import com.example.ezback.exception.QuestionHistoryNotFoundException;
-import com.example.ezback.exception.QuestionNotFoundException;
+import com.example.ezback.exception.*;
 import com.example.ezback.repository.QuestionRepository;
 import com.example.ezback.repository.UserDailyQuestionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -123,5 +120,35 @@ public class QuestionService {
         }
 
         return QuestionHistoryResponse.from(userDailyQuestion);
+    }
+
+    @Transactional(readOnly = true)
+    public QuestionSearchResultResponse searchQuestions(String keyword, int page, int size) {
+        // keyword 검증
+        if (keyword == null || keyword.trim().isEmpty()) {
+            throw new SearchKeywordRequiredException("검색어(keyword)가 필요합니다.");
+        }
+
+        // TODO: keyword 최소 길이 정책 결정 필요 (명세에서 "최소 1글자 이상" 언급)
+        // 현재는 공백 제거 후 빈 문자열만 체크
+        if (keyword.trim().length() < 1) {
+            throw new SearchKeywordRequiredException("검색어(keyword)가 필요합니다.");
+        }
+
+        // 페이징 처리하여 검색
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Question> questionPage = questionRepository.searchByKeyword(keyword.trim(), pageable);
+
+        // 검색 결과가 없으면 404 예외
+        if (questionPage.isEmpty()) {
+            throw new QuestionSearchNotFoundException("검색 결과가 없습니다.");
+        }
+
+        // DTO 변환
+        List<QuestionSearchItemResponse> results = questionPage.getContent().stream()
+                .map(QuestionSearchItemResponse::from)
+                .collect(Collectors.toList());
+
+        return QuestionSearchResultResponse.from(questionPage, results);
     }
 }

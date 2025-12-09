@@ -102,6 +102,20 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(e.getMessage()));
     }
 
+    @ExceptionHandler(SearchKeywordRequiredException.class)
+    public ResponseEntity<ErrorResponse> handleSearchKeywordRequiredException(SearchKeywordRequiredException e) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(QuestionSearchNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleQuestionSearchNotFoundException(QuestionSearchNotFoundException e) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
         FieldError fieldError = e.getBindingResult().getFieldError();
