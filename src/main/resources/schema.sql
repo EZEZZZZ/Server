@@ -57,6 +57,61 @@ CREATE TABLE IF NOT EXISTS anniversaries (
     CONSTRAINT fk_anniversary_couple FOREIGN KEY (couple_id) REFERENCES couples(id) ON DELETE CASCADE
 );
 
+-- Questions Table
+CREATE TABLE IF NOT EXISTS questions (
+    id BIGSERIAL PRIMARY KEY,
+    question VARCHAR(500) NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);
+
+-- User Daily Questions Table
+CREATE TABLE IF NOT EXISTS user_daily_questions (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    question_id BIGINT NOT NULL,
+    date DATE NOT NULL,
+    answered BOOLEAN NOT NULL DEFAULT false,
+    answer VARCHAR(1000),
+    created_at TIMESTAMP NOT NULL,
+    CONSTRAINT fk_user_daily_question_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_daily_question_question FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
+    CONSTRAINT uk_user_question_date UNIQUE (user_id, date)
+);
+
+-- Search Histories Table
+CREATE TABLE IF NOT EXISTS search_histories (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    keyword VARCHAR(30) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    CONSTRAINT fk_search_history_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Missions Table
+CREATE TABLE IF NOT EXISTS missions (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    CONSTRAINT chk_mission_type CHECK (type IN ('ACTION', 'QUESTION'))
+);
+
+-- User Missions Table
+CREATE TABLE IF NOT EXISTS user_missions (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    mission_id BIGINT NOT NULL,
+    date DATE NOT NULL,
+    performed BOOLEAN NOT NULL DEFAULT false,
+    performed_at TIMESTAMP,
+    evidence VARCHAR(500),
+    image_url VARCHAR(500),
+    created_at TIMESTAMP NOT NULL,
+    CONSTRAINT fk_user_mission_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_mission_mission FOREIGN KEY (mission_id) REFERENCES missions(id) ON DELETE CASCADE,
+    CONSTRAINT uk_user_mission_date UNIQUE (user_id, date)
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_provider ON users(provider, provider_id);
@@ -67,3 +122,8 @@ CREATE INDEX IF NOT EXISTS idx_emotions_user_created ON user_emotions(user_id, c
 CREATE INDEX IF NOT EXISTS idx_emotions_user_date ON user_emotions(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_anniversaries_couple_date ON anniversaries(couple_id, date);
 CREATE INDEX IF NOT EXISTS idx_anniversaries_couple ON anniversaries(couple_id);
+CREATE INDEX IF NOT EXISTS idx_user_daily_questions_user_date ON user_daily_questions(user_id, date);
+CREATE INDEX IF NOT EXISTS idx_user_daily_questions_date ON user_daily_questions(date);
+CREATE INDEX IF NOT EXISTS idx_search_histories_user_created ON search_histories(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_missions_user_date ON user_missions(user_id, date);
+CREATE INDEX IF NOT EXISTS idx_user_missions_date ON user_missions(date);
