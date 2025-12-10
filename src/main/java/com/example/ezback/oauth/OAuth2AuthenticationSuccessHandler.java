@@ -27,7 +27,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         String token = jwtUtil.generateToken(oauth2User.getEmail(), oauth2User.getUserId());
 
-        String targetUrl = UriComponentsBuilder.fromUriString("/login/success")
+        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/auth/callback")
                 .queryParam("token", token)
                 .build().toUriString();
 
